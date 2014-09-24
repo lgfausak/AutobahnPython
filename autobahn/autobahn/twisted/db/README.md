@@ -9,7 +9,7 @@ A simple database construct for Autobahn allowing for different implementations.
 Command to start database engine:
 
 ```python
-import db.py
+from autobahn.twisted.dbengine import DB
 yield self.call('adm.db.start', 'DRIVER', 'topic_root')
 ```
 
@@ -31,8 +31,8 @@ The rpc calls in this example would be :
 The class also has a main routine which will connect to your Autobahn realm as required.  There is a convenience startup feature in the main routine to establish a connection with a database if desired.
 
 ```
-./db.py --help yields:
-usage: db.py [-h] [-w WSOCKET] [-r REALM] [-v] [-u USER] [-s PASSWORD]
+./dbengine.py --help yields:
+usage: dbengine.py [-h] [-w WSOCKET] [-r REALM] [-v] [-u USER] [-s PASSWORD]
              [-e ENGINE] [-d DSN] [-t TOPIC_BASE]
 
 db admin manager for autobahn
@@ -65,9 +65,9 @@ python db.py
 You can fire up the db engine like this, but, it is more useful to use it to fire up your database connections.  For postgres, I would do this:
 
 ```
-db.py -r dbrealm -u autodb -s autodbsecret -e PG9_4 -t 'com.db' -d 'dbname=autobahn host=ab user=autouser' -v
-db.py -r dbrealm -u autodb -s autodbsecret -e MYSQL -t 'com.db' -d 'database=autobahn user=autouser password=123test' -v
-db.py -r dbrealm -u autodb -s autodbsecret -e SQLITE -t 'com.db' -d 'dbname=/tmp/autobahn' -v
+dbengine.py -r dbrealm -u autodb -s autodbsecret -e PG9_4 -t 'com.db' -d 'dbname=autobahn host=ab user=autouser' -v
+dbengine.py -r dbrealm -u autodb -s autodbsecret -e MYSQL -t 'com.db' -d 'database=autobahn user=autouser password=123test' -v
+dbengine.py -r dbrealm -u autodb -s autodbsecret -e SQLITE -t 'com.db' -d 'dbname=/tmp/autobahn' -v
 ```
 
 This sets up service for your autobahn router.  The service connects to autobahn using autodb/autodbsecret .  The service is anchored on topic 'com.db' (meaning that all of the calls registered and subscriptions offered will be rooted here, like com.db.query). The postgres database is connected to using the dsn describe by the -d flag. Finally, the -e is the engine, PG9\_4 and MYSQL14\_14 are supported.
