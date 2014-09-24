@@ -73,6 +73,7 @@ packages = [
    'autobahn.websocket.test',
    'autobahn.asyncio',
    'autobahn.twisted',
+   'autobahn.twisted.db',
    'twisted.plugins'
 ]
 
@@ -100,7 +101,7 @@ setup(
    author_email = 'autobahnws@googlegroups.com',
    url = 'http://autobahn.ws/python',
    platforms = 'Any',
-   install_requires = ['six>=1.6.1'],
+   install_requires = ['six>=1.6.1', 'txpostgres>=1.2.0'],
    extras_require = {
       ## asyncio is needed for Autobahn/asyncio
       'asyncio': asyncio_packages,
