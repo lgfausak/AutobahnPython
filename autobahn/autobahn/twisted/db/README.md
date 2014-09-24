@@ -74,27 +74,29 @@ This sets up service for your autobahn router.  The service connects to autobahn
 
 Once you have a database engine up and running the following operations are available:
 
-= -t 'topic.base'
+# Basic Documentation
+
+## -t 'topic.base'
 
 All of the actions that can be performed are rooted on the topic base you provided with the -t flag. For example purposes, I will use com.db here, but, this can be any topic you want.
 
-== com.db.connect dsn
+## com.db.connect dsn
 
 Connect to a database.  The dsn is formatted like psycopg2 requires.  There are engine specific arguments, most of which can be seen in the example above.
 
-== com.db.disconnect
+## com.db.disconnect
 
 Disconnect from a database.
 
-== com.db.query query args
+## com.db.query query args
 
 Run query on the database.  Argument substitution with supplied arguments.  Depending on the database the query will look different.  For example, postgres uses the realdictcursor, so inline substitution is done with %(name)s tags. Sqlite3 uses tags that look like :name. The result of the query is an array of dictionary rows.
 
-== com.db.operation query args
+## com.db.operation query args
 
 Run an operation.  The difference between an operation and a query is that an operation does not expect an answer (like an insert statement).
 
-== com.db.watch name
+## com.db.watch name
 
 This function is probably only valid on a postgres database.  Postgres has a notify/listen feature that provides for async notification that something has happened in the database.  This watch function sets up a 'LISTEN' for one of these notifications.  When called, watch will create a new publication rooted on com.db.watch with an arbitrary random name. For example, say I want to know any time the employee data changes.  I do something like: sub\_topic = yield my\_app.call('com.db.watch','employee\_change').  This will return a topic string like com.db.watch.abcdefghij (random lower case characters).  I then subscribe to that.  Anytime a database client issues a NOTIFY employee\_change my subscription will get published with the payload.
 
