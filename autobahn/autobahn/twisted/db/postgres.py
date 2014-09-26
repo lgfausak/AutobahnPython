@@ -67,6 +67,7 @@ class PG9_4(dbbase):
     def __init__(self, topic_base, app_session, debug):
         if debug is not None and debug:
             log.startLogging(sys.stdout)
+
         log.msg("PG9_4:__init__()")
         self.conn = None
         self.dsn = None
@@ -91,9 +92,9 @@ class PG9_4(dbbase):
     #  DBUSER is the user to connect as
     #
     @inlineCallbacks
-    def connect(self,dsn):
-        log.msg("PG9_4:connect({})".format(dsn))
-        self.dsn = dsn
+    def connect(self,*args,**kwargs):
+        log.msg("PG9_4:connect({},{})".format(args,kwargs))
+        self.dsn = args[0]
         self.conn = RDC()
         try:
             rv = yield self.conn.connect(self.dsn)
@@ -107,8 +108,8 @@ class PG9_4(dbbase):
     # disconnect
     #   this disconnects from the currently connected database.  if no database
     #   is currently connected then this does nothing.
-    def disconnect(self):
-        log.msg("PG9_4:disconnect()")
+    def disconnect(self,*args,**kwargs):
+        log.msg("PG9_4:disconnect({},{})".format(args,kwargs))
         if self.conn:
             c = self.conn
             self.conn = None
@@ -135,11 +136,20 @@ class PG9_4(dbbase):
     #
 
     @inlineCallbacks
-    def query(self,s,a):
-        log.msg("PG9_4:query()")
+    def query(self,*args, **kwargs):
+        log.msg("PG9_4:query() ARGS:{} KWARGS:{}".format(args, kwargs))
+        s = args[0]
+        a = args[1]
         if self.conn:
             try:
                 log.msg("PG9_4:query().running({} with args {})".format(s,a))
+                if 'details' in kwargs and kwargs['details'].authid is not None:
+                    details = kwargs['details']
+                    log.msg("details.authid {}".format(details.authid))
+                    rv = yield self.conn.runOperation(
+                        "select * from private.set_session_variable('audit_user',%(user_id)s)",
+                        {'user_id':str(details.authid)})
+                    log.msg("details.authid done {}".format(details.authid))
                 rv = yield self.conn.runQuery(s,a)
                 log.msg("PG9_4:query().results({})".format(rv))
                 returnValue(rv)
@@ -162,11 +172,20 @@ class PG9_4(dbbase):
     #
 
     @inlineCallbacks
-    def operation(self,s,a):
-        log.msg("PG9_4:operation()")
+    def operation(self,*args,**kwargs):
+        log.msg("PG9_4:operation() ARGS:{} KWARGS:{}".format(args, kwargs))
+        s = args[0]
+        a = args[1]
         if self.conn:
             try:
                 log.msg("PG9_4:operation().running({} with args {})".format(s,a))
+                if 'details' in kwargs and kwargs['details'].authid is not None:
+                    details = kwargs['details']
+                    log.msg("details.authid {}".format(details.authid))
+                    rv = yield self.conn.runOperation(
+                        "select * from private.set_session_variable('audit_user',%(user_id)s)",
+                        {'user_id':str(details.authid)})
+                    log.msg("details.authid done {}".format(details.authid))
                 rv = yield self.conn.runOperation(s,a)
                 returnValue(rv)
             except Exception as err:
@@ -196,8 +215,9 @@ class PG9_4(dbbase):
             yield self.app_session.publish(six.u(self.wlist[notify.channel]['topic']), notify.payload)
 
     @inlineCallbacks
-    def watch(self,word):
-        log.msg("PG9_4:watch(): {}".format(word))
+    def watch(self,*args,**kwargs):
+        log.msg("PG9_4:watch() ARGS:{} KWARGS:{}".format(args, kwargs))
+        word = args[0]
         if self.conn is None:
             raise Exception("cannot add watch because there is no connection {}".format(word))
 
