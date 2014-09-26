@@ -146,13 +146,25 @@ class PG9_4(dbbase):
                 if 'details' in kwargs and kwargs['details'].authid is not None:
                     details = kwargs['details']
                     log.msg("details.authid {}".format(details.authid))
-                    rv = yield self.conn.runOperation(
-                        "select * from private.set_session_variable('audit_user',%(user_id)s)",
-                        {'user_id':str(details.authid)})
-                    log.msg("details.authid done {}".format(details.authid))
-                rv = yield self.conn.runQuery(s,a)
+
+                    # we run an interaction to keep together the
+                    # set_session_variable() with the 
+                    # query.  so, if stuff is deleted/updated/inserted
+                    # the auditing mechanisms have the authid
+                    # set to create an audit trail
+                    @inlineCallbacks
+                    def interaction(cur):
+                        yield cur.execute("select * from private.set_session_variable('audit_user',%(user_id)s)",
+                            {'user_id':str(details.authid)})
+                        rv = yield cur.execute(s, a)
+                        returnValue(rv.fetchall())
+                        return
+                    rv = yield self.conn.runInteraction(interaction)
+                    returnValue(rv)
+                else:
+                    rv = yield self.conn.runQuery(s,a)
+                    returnValue(rv)
                 log.msg("PG9_4:query().results({})".format(rv))
-                returnValue(rv)
             except Exception as err:
                 log.msg("PG9_4:query({}),error({})".format(s,err))
                 raise err
@@ -167,12 +179,9 @@ class PG9_4(dbbase):
     #  it is important that your query does NOT return anything!  If it does,
     #  use the query call!
     #
-    # see also:
-    #  query method has a good description of this and query.
-    #
 
     @inlineCallbacks
-    def operation(self,*args,**kwargs):
+    def operation(self,*args, **kwargs):
         log.msg("PG9_4:operation() ARGS:{} KWARGS:{}".format(args, kwargs))
         s = args[0]
         a = args[1]
@@ -182,12 +191,25 @@ class PG9_4(dbbase):
                 if 'details' in kwargs and kwargs['details'].authid is not None:
                     details = kwargs['details']
                     log.msg("details.authid {}".format(details.authid))
-                    rv = yield self.conn.runOperation(
-                        "select * from private.set_session_variable('audit_user',%(user_id)s)",
-                        {'user_id':str(details.authid)})
-                    log.msg("details.authid done {}".format(details.authid))
-                rv = yield self.conn.runOperation(s,a)
-                returnValue(rv)
+
+                    # we run an interaction to keep together the
+                    # set_session_variable() with the 
+                    # operation.  so, if stuff is deleted/updated/inserted
+                    # the auditing mechanisms have the authid
+                    # set to create an audit trail
+                    @inlineCallbacks
+                    def interaction(cur):
+                        yield cur.execute("select * from private.set_session_variable('audit_user',%(user_id)s)",
+                            {'user_id':str(details.authid)})
+                        rv = yield cur.execute(s, a)
+                        returnValue(True)
+                        return
+                    rv = yield self.conn.runInteraction(interaction)
+                    returnValue(rv)
+                else:
+                    rv = yield self.conn.runOperation(s,a)
+                    returnValue(rv)
+                log.msg("PG9_4:operation().results({})".format(rv))
             except Exception as err:
                 log.msg("PG9_4:operation({}),error({})".format(s,err))
                 raise err
