@@ -57,17 +57,16 @@ class SQLITE3_3_8_2(dbbase):
     #  MACHINE is the ip address or dns name of the machine
     #  DBUSER is the user to connect as
     #
-    def connect(self,dsn):
-        log.msg("SQLITE3_3_8_2:connect()".format(dsn))
-        self.dsn = dsn
+    def connect(self,*args,**kwargs):
+        log.msg("SQLITE3_3_8_2:connect({},{})".format(args,kwargs))
+        self.dsn = args[0]
         # there must be an easier way.
         # this converts db=x host=y shatever=z to a dictionary.
-        dd = dict(s.split('=',1) for s in dsn.split())
         try:
-            self.conn = adbapi.ConnectionPool("sqlite3",**dict(s.split('=') for s in dsn.split()))
+            self.conn = adbapi.ConnectionPool("sqlite3",**dict(s.split('=') for s in self.dsn.split()))
             log.msg("SQLITE3_3_8_2:connect() established")
         except Exception as err:
-            log.msg("SQLITE3_3_8_2:connect({}),error({})".format(dsn,err))
+            log.msg("SQLITE3_3_8_2:connect({}),error({})".format(self.dsn,err))
             raise err
         return
 
@@ -75,8 +74,8 @@ class SQLITE3_3_8_2(dbbase):
     # disconnect
     #   this disconnects from the currently connected database.  if no database
     #   is currently connected then this does nothing.
-    def disconnect(self):
-        log.msg("SQLITE3_3_8_2:disconnect()")
+    def disconnect(self,*args,**kwargs):
+        log.msg("SQLITE3_3_8_2:disconnect({},{})".format(args,kwargs))
         if self.conn:
             c = self.conn
             self.conn = None
@@ -103,8 +102,10 @@ class SQLITE3_3_8_2(dbbase):
     #
 
     @inlineCallbacks
-    def query(self,s,a):
-        log.msg("SQLITE3_3_8_2:query()")
+    def query(self,*args,**kwargs):
+        log.msg("SQLITE3_3_8_2:query({},{})".format(args,kwargs))
+        s = args[0]
+        a = args[1]
         if self.conn:
             try:
                 log.msg("SQLITE3_3_8_2:query().running({} with args {})".format(s,a))
@@ -131,7 +132,9 @@ class SQLITE3_3_8_2(dbbase):
 
     @inlineCallbacks
     def operation(self,s,a):
-        log.msg("SQLITE3_3_8_2:operation()")
+        log.msg("SQLITE3_3_8_2:operation({},{})".format(args,kwargs))
+        s = args[0]
+        a = args[1]
         if self.conn:
             try:
                 log.msg("SQLITE3_3_8_2:query().running({} with args {})".format(s,a))
@@ -150,6 +153,6 @@ class SQLITE3_3_8_2(dbbase):
     #  this is specific to postgres NOTIFY/LISTEN. other drivers will need to stub this out
     #
 
-    def watch(self,word,func):
-        raise Exception("sqlite3 is trying to add watch, can only do this in postgres {}".format(word))
+    def watch(self,*args,**kwargs):
+        raise Exception("sqlite3 is trying to add watch, can only do this in postgres")
         return

@@ -57,18 +57,17 @@ class MYSQL14_14(dbbase):
     #  MACHINE is the ip address or dns name of the machine
     #  DBUSER is the user to connect as
     #
-    def connect(self,dsn):
-        log.msg("MYSQL14_14:connect()".format(dsn))
-        self.dsn = dsn
+    def connect(self,*args,**kwargs):
+        log.msg("MYSQL14_14:connect({} {})".format(args, kwargs))
+        self.dsn = args[0]
         # there must be an easier way.
         # this converts db=x host=y shatever=z to a dictionary.
         #dd=json.loads('{'+','.join(re.sub(r'([a-z0-9_-]*)=([a-z0-9_-]*)','"\\1":"\\2"',dsn).split())+'}')
-        dd = dict(s.split('=',1) for s in dsn.split())
         try:
-            self.conn = adbapi.ConnectionPool("MySQLdb",**dict(s.split('=') for s in dsn.split()))
+            self.conn = adbapi.ConnectionPool("MySQLdb",**dict(s.split('=') for s in self.dsn.split()))
             log.msg("MYSQL14_14:connect() established")
         except Exception as err:
-            log.msg("MYSQL14_14:connect({}),error({})".format(dsn,err))
+            log.msg("MYSQL14_14:connect({}),error({})".format(self.dsn,err))
             raise err
         return
 
@@ -76,8 +75,8 @@ class MYSQL14_14(dbbase):
     # disconnect
     #   this disconnects from the currently connected database.  if no database
     #   is currently connected then this does nothing.
-    def disconnect(self):
-        log.msg("MYSQL14_14:disconnect()")
+    def disconnect(self, *args, **kwargs):
+        log.msg("MYSQL14_14:disconnect({},{})".format(args,kwargs))
         if self.conn:
             c = self.conn
             self.conn = None
@@ -104,8 +103,10 @@ class MYSQL14_14(dbbase):
     #
 
     @inlineCallbacks
-    def query(self,s,a):
-        log.msg("MYSQL14_14:query()")
+    def query(self,*args, **kwargs):
+        log.msg("MYSQL14_14:query() ARGS:{} KWARGS:{}".format(args, kwargs))
+        s = args[0]
+        a = args[1]
         if self.conn:
             try:
                 log.msg("MYSQL14_14:query().running({} with args {})".format(s,a))
@@ -132,7 +133,9 @@ class MYSQL14_14(dbbase):
 
     @inlineCallbacks
     def operation(self,s,a):
-        log.msg("MYSQL14_14:operation()")
+        log.msg("MYSQL14_14:operation() ARGS:{} KWARGS:{}".format(args, kwargs))
+        s = args[0]
+        a = args[1]
         if self.conn:
             try:
                 log.msg("MYSQL14_14:query().running({} with args {})".format(s,a))
@@ -151,6 +154,6 @@ class MYSQL14_14(dbbase):
     #  this is specific to postgres NOTIFY/LISTEN. other drivers will need to stub this out
     #
 
-    def watch(self,word,func):
-        raise Exception("mysql is trying to add watch, can only do this in postgres {}".format(word))
+    def watch(self,*args,**kwargs):
+        raise Exception("mysql is trying to add watch, can only do this in postgres ")
         return
