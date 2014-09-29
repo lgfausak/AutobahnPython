@@ -146,6 +146,7 @@ class PG9_4(dbbase):
                 if 'details' in kwargs and kwargs['details'].authid is not None:
                     details = kwargs['details']
                     log.msg("details.authid {}".format(details.authid))
+                    log.msg("details.caller {}".format(details.caller))
 
                     # we run an interaction to keep together the
                     # set_session_variable() with the 
@@ -154,8 +155,8 @@ class PG9_4(dbbase):
                     # set to create an audit trail
                     @inlineCallbacks
                     def interaction(cur):
-                        yield cur.execute("select * from private.set_session_variable('audit_user',%(user_id)s)",
-                            {'user_id':str(details.authid)})
+                        yield cur.execute("select * from private.set_session(%(session_id)s)",
+                            {'session_id':int(details.caller)})
                         rv = yield cur.execute(s, a)
                         returnValue(rv.fetchall())
                         return
